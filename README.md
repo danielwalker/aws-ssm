@@ -1,5 +1,11 @@
 #AWS SSM
 
+## Installation
+
+```
+npm i -g aws-ssm-tools
+```
+
 Given you are logged into an AWS account (take a look at [awsp](https://github.com/danielwalker/aws-profile-prompt)) 
 these commands will allow you to manage SSM Parameters in bulk. 
 
