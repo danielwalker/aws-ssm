@@ -43,6 +43,7 @@ const ssm = new SSMClient();
             fs.truncateSync(file);
         } else {
             console.log(`Error: ${file} already exists [re]move it first.`)
+            process.exit(1)
         }
     }
 
