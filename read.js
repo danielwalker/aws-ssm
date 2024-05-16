@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import yargs from 'yargs/yargs';
-import fs from 'fs'
 import {GetParametersByPathCommand, SSMClient} from '@aws-sdk/client-ssm'
 
 const argv = yargs(process.argv.slice(2))

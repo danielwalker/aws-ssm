@@ -11,13 +11,13 @@ npm i -g aws-ssm-tools
 Given you are logged into an AWS account (take a look at [awsp](https://github.com/danielwalker/aws-profile-prompt)) 
 these commands will allow you to manage SSM Parameters in bulk. 
 
-To read all Parameters.
+To read all Parameters:
 
 ```
 aws-ssm-read  
 ```
 
-To write Parameters from one account to another
+To write Parameters from one account to another:
 
 ```
 
@@ -29,6 +29,17 @@ awsp
 
 # Write the Parameters to the new Account (-o will overwrite Parameters). 
 aws-ssm-write -f env.json -o
+```
+
+You can also use this tool to create .env files given an SSM Path. For example, the following will create a .env.dev 
+file based on the SSM Parameters in the Development AWS Account.
+
+```
+# Switch into the Development AWS Account.
+awsp
+
+# Dump the Parameters to .env.dev
+aws-ssm-read -p /mams/cloud -e > .env.dev
 ```
 
 Full help can be found using:
