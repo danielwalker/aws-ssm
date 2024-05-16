@@ -1,4 +1,6 @@
-#AWS SSM
+# AWS SSM
+
+Tools for reading and writing SSM Parameters in bulk.
 
 ## Installation
 
