@@ -12,56 +12,39 @@ const argv = yargs(process.argv.slice(2))
             description: 'The SSM path to read parameters from',
             default: '/'
         },
-        f: {
-            type: 'string',
-            alias: 'file',
-            description: 'The file to write to',
-            demandOption: true,
-        },
-        s: {
+        e: {
             type: 'boolean',
-            alias: 'stripPath',
-            description: 'Should SSM paths be stripped from the output?',
-            default: false,
-        },
-        o: {
-            type: 'boolean',
-            alias: 'overwrite',
-            description: 'Overwrite the output file',
+            alias: 'dotEnv',
+            description: 'Output plain .env properties',
             default: false,
         }
     })
     .parseSync();
 
-const {f: file, p: path, s: stripPath, o: overwrite} = argv;
+const {p: path, e: dotEnv} = argv;
 
 const ssm = new SSMClient();
 
 (async () => {
-    if (fs.existsSync(file)) {
-        if (overwrite === true) {
-            fs.truncateSync(file);
-        } else {
-            console.log(`Error: ${file} already exists [re]move it first.`)
-            process.exit(1)
-        }
-    }
-
     const parameters = await readPage(path, [])
 
-    parameters.forEach((parameter) => {
-        fs.appendFileSync(file, `${getParameterName(parameter)}=${parameter['Value']}\n`);
-    })
-})();
+    if (dotEnv) {
+        parameters.forEach((parameter) => {
+            console.log(`${parameter.Name.split('/').reverse()[0]}=${parameter.Value}`)
+        })
+    } else {
 
+        const json = parameters.map((parameter) => {
+            return {
+                Type: parameter.Type,
+                Name: parameter.Name,
+                Value: parameter.Value
+            }
+        })
 
-function getParameterName(parameter) {
-    let name = parameter['Name'];
-    if (stripPath) {
-        return name.split('/').reverse()[0];
+        console.log(JSON.stringify(json, null, 2))
     }
-    return name;
-}
+})();
 
 async function readPage(path, results, nextToken) {
     const r = await ssm.send(

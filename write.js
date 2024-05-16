@@ -10,13 +10,19 @@ const argv = yargs(process.argv.slice(2))
         p: {
             type: 'string',
             alias: 'path',
-            description: 'Prepends the path to all Paramaters. Useful for writing .env files'
+            description: 'Prepends the path to all Parameters. Useful for writing .env files'
         },
         f: {
             type: 'string',
             alias: 'file',
-            description: 'The file to read',
+            description: 'The file to read. ',
             demandOption: true,
+        },
+        e: {
+            type: 'boolean',
+            alias: 'dotEnv',
+            description: 'Does the file contain plain .env properties',
+            default: false,
         },
         o: {
             type: 'boolean',
@@ -27,7 +33,7 @@ const argv = yargs(process.argv.slice(2))
     })
     .parseSync();
 
-const {f: file, p: path, o: overwrite} = argv;
+const {f: file, p: path, o: overwrite, e: dotEnv} = argv;
 
 const ssm = new SSMClient();
 
@@ -49,30 +55,47 @@ const throttle = pThrottle({
         process.exit(1)
     }
 
-    const lines = fs.readFileSync(file).toString().split('\n')
+    const items = readFile(file);
 
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < items.length; i++) {
 
-        const [k, v] = lines[i].split('=');
+        const item = items[i];
 
-        if (k && v) {
-            const name = `${path ?? ''}${k.trim()}`;
-            const value = v.trim();
+        // There is a rate limit at AWS.
+        const throttled = throttle(() => {
+            return ssm.send(new PutParameterCommand({
+                ...item,
+                Overwrite: overwrite
+            }))
+        })
 
-            // There is a rate limit at AWS.
-            const throttled = throttle(() => {
-                return ssm.send(new PutParameterCommand({
-                    Name: name,
-                    Value: value,
-                    Type: "String",
-                    Overwrite: overwrite
-                }))
-            })
+        // Call the throttled function.
+        await throttled();
 
-            // Call the throttled function.
-            await throttled();
-
-            console.log(`Written ${name} = ${value}`);
-        }
+        console.log(`Written ${item.Name} = ${item.Value} (${item.Type})`);
     }
 })();
+
+function readFile() {
+    const content = fs.readFileSync(file).toString()
+
+    // If not a .env then we parse as json and assume it's the output from aws-ssm-read.
+    if (!dotEnv) {
+        return JSON.parse(content);
+    }
+
+    // Read as a properties file
+    const lines = content.split('\n')
+    return lines.map((line) => {
+        const [k, v] = line.split('=');
+        const name = `${path ?? ''}${k.trim()}`;
+        const value = v.trim();
+
+        // If Parsing as properties we must assume the type is String.
+        return {
+            Name: name,
+            Value: value,
+            Type: 'String'
+        }
+    })
+}
