@@ -7,8 +7,8 @@
   "author": "daniel.walker@gmail.com",
   "license": "ISC",
   "bin": {
-    "aws-ssm-read": "./read.js",
-    "aws-ssm-write": "./write.js"
+    "aws-ssm-read": "read.js",
+    "aws-ssm-write": "write.js"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.577.0",
