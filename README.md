@@ -20,7 +20,6 @@ aws-ssm-read
 To write Parameters from one account to another:
 
 ```
-
 # Dump the Parameters from one Account.
 aws-ssm-read > env.json
 
@@ -39,7 +38,13 @@ file based on the SSM Parameters in the Development AWS Account.
 awsp
 
 # Dump the Parameters to .env.dev
-aws-ssm-read -p /mams/cloud -e > .env.dev
+aws-ssm-read -p /project/app -e > .env.dev
+```
+
+To write a local `.env.dev` file to SSM under a path (all these will be written as an SSM String Type Parameters):
+
+```
+aws-ssm-write -p /project/app -e -f .env.dev
 ```
 
 Full help can be found using:
